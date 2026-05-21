@@ -69,6 +69,28 @@ const projectController = {
     }
   },
 
+  getProject: async (req: Request, res: Response, next: NextFunction) => {
+    const { projectId } = req.params;
+    const userId = req.user!.id;
+
+    try {
+      const membership = await prisma.projectMember.findUnique({
+        where: { userId_projectId: { userId, projectId } },
+        include: { project: true },
+      });
+
+      if (!membership) {
+        return res.status(404).json({ err: 'Project not found' });
+      }
+
+      res.locals.data = { ...membership.project, role: membership.role };
+      res.locals.status = 200;
+      return next();
+    } catch (err) {
+      return next(err);
+    }
+  },
+
   getProjects: async (req: Request, res: Response, next: NextFunction) => {
     const userId = req.user!.id;
 
