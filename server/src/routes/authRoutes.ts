@@ -18,6 +18,13 @@ router.post(
 );
 
 router.post(
+  '/login',
+  authLimiter,
+  authController.login,
+  (_req, res) => res.status(res.locals.status as number).json(res.locals.data)
+);
+
+router.post(
   '/verify',
   authController.verify,
   (_req, res) => res.status(res.locals.status as number).json(res.locals.data)

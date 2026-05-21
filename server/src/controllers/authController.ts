@@ -6,7 +6,7 @@ import nodemailer from 'nodemailer';
 import prisma from '../lib/prisma';
 import resend from '../lib/resend';
 import { JwtPayload } from '../middleware/authMiddleware';
-import { registerSchema, verifySchema, resendCodeSchema } from '../schemas/authSchemas';
+import { registerSchema, verifySchema, resendCodeSchema, loginSchema } from '../schemas/authSchemas';
 
 const authController = {
   register: async (req: Request, res: Response, next: NextFunction) => {
@@ -158,6 +158,38 @@ const authController = {
       }
 
       res.locals.data = { message: 'A new verification code has been sent to your email.' };
+      res.locals.status = 200;
+      return next();
+    } catch (err) {
+      return next(err);
+    }
+  },
+
+  login: async (req: Request, res: Response, next: NextFunction) => {
+    const result = loginSchema.safeParse(req.body);
+    if (!result.success) {
+      return res.status(400).json({ err: result.error.errors[0].message });
+    }
+
+    const { email, password } = result.data;
+
+    try {
+      const user = await prisma.user.findUnique({ where: { email } });
+      // always run bcrypt even if user not found to avoid leaking timing information
+      const passwordMatch = user ? await bcrypt.compare(password, user.password) : false;
+
+      if (!user || !passwordMatch) {
+        return res.status(401).json({ err: 'Invalid credentials' });
+      }
+
+      if (!user.isVerified) {
+        return res.status(403).json({ err: 'Account not verified' });
+      }
+
+      const payload: JwtPayload = { id: user.id };
+      const token = jwt.sign(payload, process.env.JWT_SECRET!, { expiresIn: '7d' });
+
+      res.locals.data = { token, user: { id: user.id, email: user.email } };
       res.locals.status = 200;
       return next();
     } catch (err) {
