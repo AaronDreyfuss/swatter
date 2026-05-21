@@ -35,6 +35,24 @@ const projectController = {
       return next(err);
     }
   },
+  getProjects: async (req: Request, res: Response, next: NextFunction) => {
+    const userId = req.user!.id;
+
+    try {
+      const memberships = await prisma.projectMember.findMany({
+        where: { userId },
+        include: { project: true },
+      });
+
+      const projects = memberships.map(({ project, role }) => ({ ...project, role }));
+
+      res.locals.data = projects;
+      res.locals.status = 200;
+      return next();
+    } catch (err) {
+      return next(err);
+    }
+  },
 };
 
 export default projectController;

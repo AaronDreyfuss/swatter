@@ -6,6 +6,12 @@ const router = Router();
 
 router.use(authMiddleware);
 
+router.get(
+  '/',
+  projectController.getProjects,
+  (_req, res) => res.status(res.locals.status as number).json(res.locals.data)
+);
+
 router.post(
   '/',
   projectController.createProject,
