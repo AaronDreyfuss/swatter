@@ -92,6 +92,39 @@ const projectController = {
     }
   },
 
+  removeMember: async (req: Request, res: Response, next: NextFunction) => {
+    const { projectId, userId: targetUserId } = req.params;
+
+    try {
+      const member = await prisma.projectMember.findUnique({
+        where: { userId_projectId: { userId: targetUserId, projectId } },
+      });
+
+      if (!member) {
+        return res.status(404).json({ err: 'Member not found' });
+      }
+
+      if (member.role === Role.ADMIN) {
+        const adminCount = await prisma.projectMember.count({
+          where: { projectId, role: Role.ADMIN },
+        });
+        if (adminCount === 1) {
+          return res.status(400).json({ err: 'Cannot remove the last admin' });
+        }
+      }
+
+      const removed = await prisma.projectMember.delete({
+        where: { userId_projectId: { userId: targetUserId, projectId } },
+      });
+
+      res.locals.data = removed;
+      res.locals.status = 200;
+      return next();
+    } catch (err) {
+      return next(err);
+    }
+  },
+
   changeMemberRole: async (req: Request, res: Response, next: NextFunction) => {
     const result = changeMemberRoleSchema.safeParse(req.body);
     if (!result.success) {

@@ -26,6 +26,13 @@ router.post(
   (_req, res) => res.status(res.locals.status as number).json(res.locals.data)
 );
 
+router.delete(
+  '/:projectId/members/:userId',
+  roleMiddleware(Role.ADMIN),
+  projectController.removeMember,
+  (_req, res) => res.status(res.locals.status as number).json(res.locals.data)
+);
+
 router.patch(
   '/:projectId/members/:userId/role',
   roleMiddleware(Role.ADMIN),
