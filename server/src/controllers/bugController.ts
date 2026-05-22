@@ -35,6 +35,34 @@ const bugController = {
       return next(err);
     }
   },
+  getBug: async (req: Request, res: Response, next: NextFunction) => {
+    const { projectId, bugId } = req.params;
+
+    try {
+      const bug = await prisma.bug.findFirst({
+        where: { id: bugId, projectId },
+        include: {
+          comments: {
+            orderBy: { createdAt: 'asc' },
+            include: {
+              author: { select: { id: true, email: true } },
+            },
+          },
+        },
+      });
+
+      if (!bug) {
+        return res.status(404).json({ err: 'Bug not found' });
+      }
+
+      res.locals.data = bug;
+      res.locals.status = 200;
+      return next();
+    } catch (err) {
+      return next(err);
+    }
+  },
+
   getBugs: async (req: Request, res: Response, next: NextFunction) => {
     const queryResult = getBugsQuerySchema.safeParse(req.query);
     if (!queryResult.success) {

@@ -9,6 +9,13 @@ const router = Router();
 router.use(authMiddleware);
 
 router.get(
+  '/:projectId/bugs/:bugId',
+  roleMiddleware(Role.MEMBER),
+  bugController.getBug,
+  (_req, res) => res.status(res.locals.status as number).json(res.locals.data)
+);
+
+router.get(
   '/:projectId/bugs',
   roleMiddleware(Role.MEMBER),
   bugController.getBugs,
