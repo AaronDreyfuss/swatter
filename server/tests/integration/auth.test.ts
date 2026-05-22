@@ -123,7 +123,7 @@ describe('POST /api/auth/verify', () => {
       .post(`${BASE}/verify`)
       .send({ email: 'test@example.com', code: user!.verificationCode });
 
-    // code is now null — second attempt should fail
+    // code is now null - second attempt should fail
     const res = await request(app)
       .post(`${BASE}/verify`)
       .send({ email: 'test@example.com', code: user!.verificationCode });

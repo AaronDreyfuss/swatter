@@ -1,5 +1,11 @@
+import { AuthProvider } from './context/AuthContext';
+
 function App() {
-  return <div>Swatter</div>;
+  return (
+    <AuthProvider>
+      <div>Swatter</div>
+    </AuthProvider>
+  );
 }
 
 export default App;

@@ -3,7 +3,7 @@ import { Role } from '@prisma/client';
 import prisma from '../lib/prisma';
 
 // Returns middleware that checks the user is a member of the project.
-// Pass Role.ADMIN to require admin specifically — Role.MEMBER allows any member.
+// Pass Role.ADMIN to require admin specifically - Role.MEMBER allows any member.
 const roleMiddleware = (role: Role) => {
   return async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     const userId = req.user!.id;
