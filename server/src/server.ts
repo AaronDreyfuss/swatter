@@ -2,6 +2,7 @@ import express, { NextFunction, Request, Response } from 'express';
 import dotenv from 'dotenv';
 import authRoutes from './routes/authRoutes';
 import projectRoutes from './routes/projectRoutes';
+import bugRoutes from './routes/bugRoutes';
 import prisma from './lib/prisma';
 
 dotenv.config();
@@ -26,6 +27,7 @@ interface AppError {
 
 app.use('/api/auth', authRoutes);
 app.use('/api/projects', projectRoutes);
+app.use('/api/projects', bugRoutes);
 
 if (process.env.NODE_ENV === 'test') {
   app.get('/api/test/verification-code', async (req: Request, res: Response) => {
