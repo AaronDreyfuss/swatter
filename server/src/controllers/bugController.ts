@@ -36,6 +36,36 @@ const bugController = {
       return next(err);
     }
   },
+  deleteBug: async (req: Request, res: Response, next: NextFunction) => {
+    const { projectId, bugId } = req.params;
+    const userId = req.user!.id;
+
+    try {
+      const [bug, member] = await Promise.all([
+        prisma.bug.findFirst({ where: { id: bugId, projectId } }),
+        prisma.projectMember.findUnique({
+          where: { userId_projectId: { userId, projectId } },
+        }),
+      ]);
+
+      if (!bug) {
+        return res.status(404).json({ err: 'Bug not found' });
+      }
+
+      if (bug.creatorId !== userId && member?.role !== Role.ADMIN) {
+        return res.status(403).json({ err: 'Access denied' });
+      }
+
+      const deleted = await prisma.bug.delete({ where: { id: bugId } });
+
+      res.locals.data = deleted;
+      res.locals.status = 200;
+      return next();
+    } catch (err) {
+      return next(err);
+    }
+  },
+
   updateBug: async (req: Request, res: Response, next: NextFunction) => {
     const result = updateBugSchema.safeParse(req.body);
     if (!result.success) {
