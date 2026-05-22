@@ -16,4 +16,11 @@ router.post(
   respond
 );
 
+router.patch(
+  '/:projectId/bugs/:bugId/comments/:commentId',
+  roleMiddleware(Role.MEMBER),
+  commentController.updateComment,
+  respond
+);
+
 export default router;
