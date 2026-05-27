@@ -1,5 +1,5 @@
 import { useState, FormEvent } from 'react';
-import { Bug, Severity } from '../types';
+import { Bug, Severity, BugStatus } from '../types';
 
 interface BugFormPayload {
   title: string;
@@ -8,6 +8,7 @@ interface BugFormPayload {
   actualBehavior: string;
   errorMessage?: string;
   severity: Severity;
+  status?: BugStatus;
 }
 
 interface Props {
@@ -17,6 +18,7 @@ interface Props {
 }
 
 const severities: Severity[] = ['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'];
+const statuses: BugStatus[] = ['OPEN', 'IN_PROGRESS', 'RESOLVED'];
 
 function BugModal({ bug, onClose, onSubmit }: Props) {
   const [title, setTitle] = useState(bug?.title ?? '');
@@ -25,6 +27,7 @@ function BugModal({ bug, onClose, onSubmit }: Props) {
   const [actualBehavior, setActualBehavior] = useState(bug?.actualBehavior ?? '');
   const [errorMessage, setErrorMessage] = useState(bug?.errorMessage ?? '');
   const [severity, setSeverity] = useState<Severity>(bug?.severity ?? 'MEDIUM');
+  const [status, setStatus] = useState<BugStatus>(bug?.status ?? 'OPEN');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -41,6 +44,7 @@ function BugModal({ bug, onClose, onSubmit }: Props) {
         actualBehavior,
         errorMessage: errorMessage || undefined,
         severity,
+        ...(bug ? { status } : {}),
       });
       onClose();
     } catch (err: unknown) {
@@ -108,6 +112,23 @@ function BugModal({ bug, onClose, onSubmit }: Props) {
             onChange={(e) => setErrorMessage(e.target.value)}
           />
         </div>
+        {bug && (
+          <div>
+            <label htmlFor="status">Status</label>
+            <select
+              id="status"
+              name="status"
+              value={status}
+              onChange={(e) => setStatus(e.target.value as BugStatus)}
+            >
+              {statuses.map((s) => (
+                <option key={s} value={s}>
+                  {s}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
         <div>
           <label htmlFor="severity">Severity</label>
           <select

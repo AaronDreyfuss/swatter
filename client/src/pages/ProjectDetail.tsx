@@ -3,13 +3,13 @@ import { useParams, useNavigate } from 'react-router-dom';
 import useProjects from '../hooks/useProjects';
 import useBugs from '../hooks/useBugs';
 import BugModal from '../components/BugModal';
-import { Project, BugStatus, Severity } from '../types';
+import { Project, Bug, BugStatus, Severity } from '../types';
 
 function ProjectDetail() {
   const { projectId } = useParams<{ projectId: string }>();
   const navigate = useNavigate();
   const { getProject } = useProjects();
-  const { data: bugs, loading: bugsLoading, error: bugsError, createBug } = useBugs(projectId!);
+  const { data: bugs, loading: bugsLoading, error: bugsError, createBug, updateBug } = useBugs(projectId!);
 
   const [project, setProject] = useState<Project | null>(null);
   const [projectLoading, setProjectLoading] = useState(true);
@@ -18,6 +18,7 @@ function ProjectDetail() {
   const [statusFilter, setStatusFilter] = useState<BugStatus | 'ALL'>('ALL');
   const [severityFilter, setSeverityFilter] = useState<Severity | 'ALL'>('ALL');
   const [modalOpen, setModalOpen] = useState(false);
+  const [editingBug, setEditingBug] = useState<Bug | undefined>(undefined);
 
   useEffect(() => {
     if (!projectId) return;
@@ -91,6 +92,9 @@ function ProjectDetail() {
               </button>
               <span>{bug.severity}</span>
               <span>{bug.status}</span>
+              <button onClick={() => { setEditingBug(bug); setModalOpen(true); }}>
+                Edit
+              </button>
             </li>
           ))}
         </ul>
@@ -98,8 +102,12 @@ function ProjectDetail() {
 
       {modalOpen && (
         <BugModal
-          onClose={() => setModalOpen(false)}
-          onSubmit={(payload) => createBug(payload)}
+          bug={editingBug}
+          onClose={() => { setModalOpen(false); setEditingBug(undefined); }}
+          onSubmit={editingBug
+            ? (payload) => updateBug(editingBug.id, payload)
+            : (payload) => createBug(payload)
+          }
         />
       )}
     </div>
