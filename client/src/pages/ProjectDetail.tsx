@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import useProjects from '../hooks/useProjects';
 import useBugs from '../hooks/useBugs';
 import BugModal from '../components/BugModal';
+import BugCard from '../components/BugCard';
 import { Project, Bug, BugStatus, Severity } from '../types';
 
 function ProjectDetail() {
@@ -86,16 +87,12 @@ function ProjectDetail() {
       {!bugsLoading && !bugsError && filteredBugs.length > 0 && (
         <ul>
           {filteredBugs.map((bug) => (
-            <li key={bug.id}>
-              <button onClick={() => navigate(`/projects/${projectId}/bugs/${bug.id}`)}>
-                {bug.title}
-              </button>
-              <span>{bug.severity}</span>
-              <span>{bug.status}</span>
-              <button onClick={() => { setEditingBug(bug); setModalOpen(true); }}>
-                Edit
-              </button>
-            </li>
+            <BugCard
+              key={bug.id}
+              bug={bug}
+              onNavigate={() => navigate(`/projects/${projectId}/bugs/${bug.id}`)}
+              onEdit={() => { setEditingBug(bug); setModalOpen(true); }}
+            />
           ))}
         </ul>
       )}
