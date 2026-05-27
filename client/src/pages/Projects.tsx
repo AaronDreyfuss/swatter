@@ -51,19 +51,22 @@ function Projects() {
   };
 
   return (
-    <div>
-      <h1>Projects</h1>
+    <div className="max-w-4xl mx-auto px-6 py-8">
+      <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Projects</h1>
 
-      {loading && <p>Loading projects...</p>}
-      {error && <p>{error}</p>}
+      {loading && <p className="text-gray-500 dark:text-gray-400">Loading projects...</p>}
+      {error && <p className="text-red-600 dark:text-red-400">{error}</p>}
       {!loading && !error && data.length === 0 && (
-        <p>You have no projects yet.</p>
+        <p className="text-gray-500 dark:text-gray-400 mb-6">You have no projects yet.</p>
       )}
       {!loading && !error && data.length > 0 && (
-        <ul>
+        <ul className="space-y-2 mb-8">
           {data.map((project) => (
             <li key={project.id}>
-              <button onClick={() => navigate(`/projects/${project.id}`)}>
+              <button
+                onClick={() => navigate(`/projects/${project.id}`)}
+                className="w-full text-left px-5 py-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg font-medium text-gray-900 dark:text-gray-100 hover:border-indigo-300 dark:hover:border-indigo-600 hover:shadow-sm transition-all"
+              >
                 {project.name}
               </button>
             </li>
@@ -71,43 +74,59 @@ function Projects() {
         </ul>
       )}
 
-      <h2>Create a project</h2>
-      <form onSubmit={handleCreate}>
-        <div>
-          <label htmlFor="projectName">Project name</label>
-          <input
-            id="projectName"
-            type="text"
-            name="projectName"
-            value={projectName}
-            onChange={(e) => setProjectName(e.target.value)}
-            required
-          />
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-6">
+          <h2 className="text-base font-semibold text-gray-900 dark:text-white mb-4">
+            Create a project
+          </h2>
+          <form onSubmit={handleCreate} className="space-y-4">
+            <div>
+              <label htmlFor="projectName" className="form-label">Project name</label>
+              <input
+                id="projectName"
+                type="text"
+                name="projectName"
+                value={projectName}
+                onChange={(e) => setProjectName(e.target.value)}
+                required
+                className="input"
+              />
+            </div>
+            {createError && (
+              <p className="text-sm text-red-600 dark:text-red-400">{createError}</p>
+            )}
+            <button type="submit" disabled={createLoading} className="btn-primary w-full">
+              {createLoading ? 'Creating...' : 'Create project'}
+            </button>
+          </form>
         </div>
-        {createError && <p>{createError}</p>}
-        <button type="submit" disabled={createLoading}>
-          {createLoading ? 'Creating...' : 'Create project'}
-        </button>
-      </form>
 
-      <h2>Join a project</h2>
-      <form onSubmit={handleJoin}>
-        <div>
-          <label htmlFor="inviteCode">Invite code</label>
-          <input
-            id="inviteCode"
-            type="text"
-            name="inviteCode"
-            value={inviteCode}
-            onChange={(e) => setInviteCode(e.target.value)}
-            required
-          />
+        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-6">
+          <h2 className="text-base font-semibold text-gray-900 dark:text-white mb-4">
+            Join a project
+          </h2>
+          <form onSubmit={handleJoin} className="space-y-4">
+            <div>
+              <label htmlFor="inviteCode" className="form-label">Invite code</label>
+              <input
+                id="inviteCode"
+                type="text"
+                name="inviteCode"
+                value={inviteCode}
+                onChange={(e) => setInviteCode(e.target.value)}
+                required
+                className="input"
+              />
+            </div>
+            {joinError && (
+              <p className="text-sm text-red-600 dark:text-red-400">{joinError}</p>
+            )}
+            <button type="submit" disabled={joinLoading} className="btn-primary w-full">
+              {joinLoading ? 'Joining...' : 'Join project'}
+            </button>
+          </form>
         </div>
-        {joinError && <p>{joinError}</p>}
-        <button type="submit" disabled={joinLoading}>
-          {joinLoading ? 'Joining...' : 'Join project'}
-        </button>
-      </form>
+      </div>
     </div>
   );
 }
