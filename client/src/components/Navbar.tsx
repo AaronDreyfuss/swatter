@@ -15,14 +15,21 @@ function Navbar() {
   };
 
   return (
-    // nav bar: flex row, space-between, padding, background, bottom border
-    <nav>
-      <Link to="/projects">Swatter</Link>
-      {/* right side: flex row, gap, align center */}
-      <div>
-        <span>{user.email}</span>
-        <button onClick={toggle}>{isDark ? 'Light' : 'Dark'}</button>
-        <button onClick={handleLogout}>Log out</button>
+    <nav className="flex items-center justify-between px-6 py-4 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+      <Link
+        to="/projects"
+        className="text-lg font-bold text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 transition-colors"
+      >
+        Swatter
+      </Link>
+      <div className="flex items-center gap-3">
+        <span className="text-sm text-gray-500 dark:text-gray-400">{user.email}</span>
+        <button onClick={toggle} className="btn-ghost">
+          {isDark ? 'Light' : 'Dark'}
+        </button>
+        <button onClick={handleLogout} className="btn-secondary">
+          Log out
+        </button>
       </div>
     </nav>
   );
