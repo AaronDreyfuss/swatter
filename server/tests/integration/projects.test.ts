@@ -118,6 +118,46 @@ describe('GET /api/projects/:projectId', () => {
   });
 });
 
+describe('GET /api/projects/:projectId/members', () => {
+  it('returns all members with userId, email, and role', async () => {
+    const { user: admin, token: adminToken } = await createUserWithToken();
+    const { user: member, token: memberToken } = await createUserWithToken({ email: `member-${Date.now()}@example.com` });
+    const project = await createTestProject(admin.id);
+
+    await request(app)
+      .post(`${BASE}/join`)
+      .set('Authorization', `Bearer ${memberToken}`)
+      .send({ inviteCode: project.inviteCode });
+
+    const res = await request(app)
+      .get(`${BASE}/${project.id}/members`)
+      .set('Authorization', `Bearer ${adminToken}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body).toHaveLength(2);
+
+    const adminEntry = res.body.find((m: { email: string }) => m.email === admin.email);
+    const memberEntry = res.body.find((m: { email: string }) => m.email === member.email);
+
+    expect(adminEntry.role).toBe('ADMIN');
+    expect(adminEntry.userId).toBe(admin.id);
+    expect(memberEntry.role).toBe('MEMBER');
+    expect(memberEntry.userId).toBe(member.id);
+  });
+
+  it('returns 403 for a non-member', async () => {
+    const { user: admin } = await createUserWithToken();
+    const { token: outsiderToken } = await createUserWithToken({ email: `outsider-${Date.now()}@example.com` });
+    const project = await createTestProject(admin.id);
+
+    const res = await request(app)
+      .get(`${BASE}/${project.id}/members`)
+      .set('Authorization', `Bearer ${outsiderToken}`);
+
+    expect(res.status).toBe(403);
+  });
+});
+
 describe('POST /api/projects/join', () => {
   it('adds the user as Member with a valid invite code', async () => {
     const { user: admin } = await createUserWithToken();

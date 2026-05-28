@@ -21,6 +21,12 @@ router.get(
   respond
 );
 
+router.get(
+  '/:projectId/members',
+  projectController.getMembers,
+  respond
+);
+
 router.post(
   '/join',
   projectController.joinProject,

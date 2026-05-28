@@ -170,6 +170,36 @@ const projectController = {
     }
   },
 
+  getMembers: async (req: Request, res: Response, next: NextFunction) => {
+    const { projectId } = req.params;
+    const userId = req.user!.id;
+
+    try {
+      const requester = await prisma.projectMember.findUnique({
+        where: { userId_projectId: { userId, projectId } },
+      });
+
+      if (!requester) {
+        return res.status(403).json({ err: 'Forbidden' });
+      }
+
+      const members = await prisma.projectMember.findMany({
+        where: { projectId },
+        include: { user: { select: { id: true, email: true } } },
+      });
+
+      res.locals.data = members.map(({ userId: uid, role, user }) => ({
+        userId: uid,
+        email: user.email,
+        role,
+      }));
+      res.locals.status = 200;
+      return next();
+    } catch (err) {
+      return next(err);
+    }
+  },
+
   getProjects: async (req: Request, res: Response, next: NextFunction) => {
     const userId = req.user!.id;
 
