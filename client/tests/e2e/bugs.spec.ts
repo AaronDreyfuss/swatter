@@ -214,6 +214,49 @@ test('Admin sees the invite code on ProjectDetail', async ({ page, request }) =>
   await expect(page.getByText('Invite code:', { exact: false })).toBeVisible();
 });
 
+test('Admin assigns a bug to a member and the assignee name appears', async ({ page, request }) => {
+  const adminEmail = `admin${Date.now()}@example.com`;
+  const memberEmail = `member${Date.now()}@example.com`;
+
+  const { token: adminToken, user: adminUser } = await createVerifiedUser(request, adminEmail);
+  const { token: memberToken } = await createVerifiedUser(request, memberEmail);
+  const project = await createProject(request, adminToken, 'Assign Bug Project');
+  await joinProject(request, memberToken, project.inviteCode);
+  const bug = await createBug(request, adminToken, project.id, 'Assignable bug');
+
+  await loginAs(page, adminToken, adminUser);
+  await page.goto(`/projects/${project.id}/bugs/${bug.id}`);
+
+  // scope to span to avoid matching the <option value="">Unassigned</option> in the dropdown
+  await expect(page.locator('span', { hasText: 'Unassigned' })).toBeVisible();
+  await page.getByRole('combobox').selectOption({ label: memberEmail });
+
+  await expect(page.locator('span', { hasText: 'Unassigned' })).not.toBeVisible();
+  // admin email != member email, so the member email only appears in the badge
+  await expect(page.locator('span', { hasText: memberEmail })).toBeVisible();
+});
+
+test('Member can claim an unassigned bug and sees themselves as assignee', async ({ page, request }) => {
+  const adminEmail = `admin${Date.now()}@example.com`;
+  const memberEmail = `member${Date.now()}@example.com`;
+
+  const { token: adminToken } = await createVerifiedUser(request, adminEmail);
+  const { token: memberToken, user: memberUser } = await createVerifiedUser(request, memberEmail);
+  const project = await createProject(request, adminToken, 'Claim Bug Project');
+  await joinProject(request, memberToken, project.inviteCode);
+  const bug = await createBug(request, adminToken, project.id, 'Claimable bug');
+
+  await loginAs(page, memberToken, memberUser);
+  await page.goto(`/projects/${project.id}/bugs/${bug.id}`);
+
+  await expect(page.getByText('Unassigned')).toBeVisible();
+  await page.getByRole('button', { name: 'Claim' }).click();
+
+  // after claiming the Unassign button appears - that confirms the assignment went through
+  await expect(page.locator('span', { hasText: 'Unassigned' })).not.toBeVisible();
+  await expect(page.getByRole('button', { name: 'Unassign' })).toBeVisible();
+});
+
 test('Member does not see the invite code on ProjectDetail', async ({ page, request }) => {
   const adminEmail = `admin${Date.now()}@example.com`;
   const memberEmail = `member${Date.now()}@example.com`;

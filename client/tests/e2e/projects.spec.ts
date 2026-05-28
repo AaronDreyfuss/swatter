@@ -1,5 +1,16 @@
 import { test, expect, APIRequestContext, Page } from '@playwright/test';
 
+async function joinProject(
+  request: APIRequestContext,
+  token: string,
+  inviteCode: string
+): Promise<void> {
+  await request.post('/api/projects/join', {
+    data: { inviteCode },
+    headers: { Authorization: `Bearer ${token}` },
+  });
+}
+
 const password = 'password123';
 
 async function createVerifiedUser(
@@ -99,4 +110,56 @@ test('clicking a project navigates to ProjectDetail', async ({ page, request }) 
   await page.getByRole('button', { name: 'Clickable Project' }).click();
 
   await expect(page).toHaveURL(`/projects/${project.id}`);
+});
+
+test('Admin sees the member list on ProjectDetail', async ({ page, request }) => {
+  const adminEmail = `admin${Date.now()}@example.com`;
+  const memberEmail = `member${Date.now()}@example.com`;
+
+  const { token: adminToken, user: adminUser } = await createVerifiedUser(request, adminEmail);
+  const { token: memberToken } = await createVerifiedUser(request, memberEmail);
+  const project = await createProject(request, adminToken, 'Members Project');
+  await joinProject(request, memberToken, project.inviteCode);
+
+  await loginAs(page, adminToken, adminUser);
+  await page.goto(`/projects/${project.id}`);
+
+  await expect(page.getByText(adminEmail)).toBeVisible();
+  await expect(page.getByText(memberEmail)).toBeVisible();
+});
+
+test('Admin removes a member and they disappear from the list', async ({ page, request }) => {
+  const adminEmail = `admin${Date.now()}@example.com`;
+  const memberEmail = `member${Date.now()}@example.com`;
+
+  const { token: adminToken, user: adminUser } = await createVerifiedUser(request, adminEmail);
+  const { token: memberToken } = await createVerifiedUser(request, memberEmail);
+  const project = await createProject(request, adminToken, 'Remove Test Project');
+  await joinProject(request, memberToken, project.inviteCode);
+
+  await loginAs(page, adminToken, adminUser);
+  await page.goto(`/projects/${project.id}`);
+
+  const memberRow = page.locator('li', { hasText: memberEmail });
+  await memberRow.getByRole('button', { name: 'Remove' }).click();
+
+  await expect(page.getByText(memberEmail)).not.toBeVisible();
+});
+
+test("Admin changes a member's role and the dropdown reflects the update", async ({ page, request }) => {
+  const adminEmail = `admin${Date.now()}@example.com`;
+  const memberEmail = `member${Date.now()}@example.com`;
+
+  const { token: adminToken, user: adminUser } = await createVerifiedUser(request, adminEmail);
+  const { token: memberToken } = await createVerifiedUser(request, memberEmail);
+  const project = await createProject(request, adminToken, 'Role Change Project');
+  await joinProject(request, memberToken, project.inviteCode);
+
+  await loginAs(page, adminToken, adminUser);
+  await page.goto(`/projects/${project.id}`);
+
+  const memberRow = page.locator('li', { hasText: memberEmail });
+  await memberRow.getByRole('combobox').selectOption('ADMIN');
+
+  await expect(memberRow.getByRole('combobox')).toHaveValue('ADMIN');
 });
